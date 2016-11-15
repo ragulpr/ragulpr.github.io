@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Example content
+title: Modified Post
 ---
 
 
