@@ -4,18 +4,18 @@
 permalink:           pretty
 
 # Setup
-title:               'Shubham Maurya'
+title:               'Just a test blog'
 tagline:             'Personal Blog'
 description:         'Currently testing <a href="http://jekyllrb.com" target="_blank">Jekyll</a> theme that places the utmost gravity on content with a hidden drawer.'
-url:                 http://mastershubham.github.io
+url:                 www.google.com
 baseurl:             ''
 paginate:            2
 
 # About/contact
 author:
-  name:              Shubham Maurya
-  url:               https://twitter.com/mastershubhamx
-  email:             mastershubham420@gmail.com
+  name:              Test McTest
+  url:               https://twitter.com/test
+  email:             test@gmail.com
 
 # Custom vars
-version:             'I dont Know'
+version:             '1.0'
