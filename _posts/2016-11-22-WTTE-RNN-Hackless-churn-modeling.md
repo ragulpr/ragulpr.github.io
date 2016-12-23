@@ -8,11 +8,12 @@ Churn prediction is one of the most common machine-learning problems in industry
 
 The trick is really to define the problem in a way that makes the solution obvious. In doing so it becomes identical to that of trying to predict when patients will die, when machines will fail or when an earthquake will hit. It turns out that the model that I'll tell you about might be a good solution for those problems too. And yes, of course it involves deep learning but I won't talk much about it here. The focus is on the objective (function) that you train your neural networks with. 
 
-At the end of this article I hope that you've gotten familiar with at least some of the words from the title of my thesis.
+At the end of this article I hope that you've gotten familiar with at least some of the words from the title of my thesis (link available soon).
 
-> WTTE-RNN : Weibull Time To Event Recurrent Neural Network
-> 
-> A model for sequential prediction of time-to-event in the case of discrete or continuous censored data, recurrent events or time-varying covariates
+> *WTTE-RNN : Weibull Time To Event Recurrent Neural Network*
+>
+> *A model for sequential prediction of time-to-event in the case of discrete or continuous censored data, recurrent events or time-varying covariates*
+
 
 Table of contents:
 
@@ -50,18 +51,18 @@ Don't predict churn, predict non-churn. My philosophy is losely that *if somethi
 
 The raw data that we have to work with are a series of records for each customer. You can think of each customer as a timeline starting from when we first saw them until today. We can stack these timelines on top of eachother to get some overview on who had data when:
 
-![](/assets/stacked_timelines.png								)
+![stacked_timelines.png](http://i.imgur.com/JT60TnL.png)
 
 Divide your dataset so that you have the *events* (like purchases or logins) that matters for your churn definition and *features* (clicks, purchases, logins) that can be used to predict them. 
  
-![](/assets/intro_event_feature_pairs_v2.gif				)
+![intro_event_feature_pairs_v2.gif](http://i.imgur.com/pdpFqb8.gif)
 
 We want to use these features to sequentially predict the future using historic data:
-![](/assets/intro_sequential_prediction.gif								)
+![intro_sequential_prediction.gif](http://i.imgur.com/fD9iQJd.gif)
 
 The next trick is to define **what** you want to predict which can be done in multiple ways. I think the most natural thing is to predict the **time to the next event** $$y_t$$ at each timestep $$t$$. I will call this **TTE** for short. We can visualize this as a kind of sawtooth-wave:
 
-![](/assets/intro_tte_nofuzz.gif							)
+![intro_tte_nofuzz.gif](http://i.imgur.com/CjQoNFg.gif)
 If some user has a longer time to the next purchase it's reasonable to say that they are *more churned*. If the user never purchases anything again $$y_t=\infty$$. Problem is that we need to wait infinitely long to know that this was the case. This leads us to the fundamental problem of this type of data: **censoring**.
 
 ### Censored data
@@ -69,7 +70,7 @@ We don't know how old we'll be but we know that we'll get older than our current
 
 In our world we only have event-data from the **observed past** i.e from when we first saw the customer up until now. This means that we don't know what the actual time to the next (unseen) event was after the last seen event. This gives us a lower bound that we can use for training, $$\hat{y}_t\leq y_t$$. This partial observation is called **right censored data** and is shown in dotted red:
 
-![intro_tte.gif](/assets/intro_tte.gif)
+![intro_tte.gif](http://i.imgur.com/hkpM09J.gif )
 
 A censored observation $$\tilde{y}_t$$ is interpreted as *"at time $$t$$ there was at least $$\hat{y}_t$$ timesteps until an event"*. How can we use this data for training models? 
 
@@ -89,7 +90,7 @@ $$
 $$
 
 This can be seen as sliding a box in front of you and see if it covers any events:
-![previous_work_sliding_box_gendata_tau_2.gif](/assets/previous_work_sliding_box_gendata_tau_2.gif		)
+![previous_work_sliding_box_gendata_tau_2.gif](http://i.imgur.com/osjA1uZ.gif)
 Here the unknowns/$$NA$$'s appear in the last $$\tau$$ steps of the observations when there's no events (shown as blank in plot).
 
 To construct a probabilistic objective function, think of the $$b_t$$'s as independently drawn from a Bernoulli distribution that has a time varying parameter $$\theta_t$$ denoting the probability of event within $$\tau$$ time from timestep $$t$$:
@@ -114,7 +115,7 @@ $$
 
 Predicting with the model can be visualized as letting the box-height be the predicted probability $$\theta_t$$:
 
-![](/assets/previous_work_sliding_box_pred_tau_2.gif		)
+![previous_work_sliding_box_pred_tau_2.gif](http://i.imgur.com/eUlGAVZ.gif)
 
 #### Use as a churn-model
 There's some obvious benefits of this model. 
@@ -134,7 +135,7 @@ In any case you probably want $$\tau$$ to be as big as possible since you want t
 We can observe $$b_t=1$$ here if there are events but we can't exclude that there's no event just beyond the boundary. Unless we explicitly model this dropout we don't know what sorts of biases and class-imbalances we introduce by using the positive observations. It's therefore safest to drop all observations happening in the last $$\tau$$ steps. This means that the higher $$\tau$$ is, the less recent data we have to train on. 
 Raising $$\tau$$ also induce a kind of sparsity such as all being 1's:
 
-![](/assets/previous_work_sliding_box_gendata_tau_4.gif		)
+![previous_work_sliding_box_gendata_tau_4.gif](http://i.imgur.com/vDgwNNo.gif)
 
 Giving very blunt signals for your model to train on. 
 
@@ -219,7 +220,7 @@ What I call the WTTE-RNN is when we
 * Let $$\theta_t=\begin{pmatrix}\alpha_t\\\beta_t\end{pmatrix}=g(x_{0:t})$$ to be the output of an RNN
 
 The sequential prediction over the timeline can then be visualized as:
-![WTTE-RNN](/assets/solution_beta_2.gif)
+![solution_beta_2.gif](http://i.imgur.com/BUIvufH.gif)
 (Here only varying $$\alpha_t$$ but you get the picture)
 
 During training we push the pdf up around known TTE for uncensored data and minimize the area under the PDF until the censoring point for censored data. More on this later. The point is that in order to learn from what we didn't see, we make assumptions on how the TTE behaves beyond the observation boundary. 
@@ -251,7 +252,7 @@ PMF | $$p(w) =e^{-\Lambda(w)}-e^{-\Lambda(w+1)} $$ | $$ = e^{-\left(\frac{w}{\al
 
 We can use it to approximate alot of shapes of distributions. We can let it become infinitely flat or infinetely spiky and it can model hazard rates (also called [failure rate](https://en.wikipedia.org/wiki/Failure_rate)) that are decreasing ($$\beta<1$$), constant ($$\beta=1$$), or increasing ($$\beta>1$$). 
 
-![WTTE-RNN](/assets/weibull_distribution_animated.gif)
+![weibull_distribution_animated.gif](http://i.imgur.com/maUHyto.gif)
 
 The [exponential](https://en.wikipedia.org/wiki/Exponential_distribution) and the discrete [geometric](https://en.wikipedia.org/wiki/Geometric_distribution) distribution is the special case when $$\beta=1$$. This means that the exponential- and Weibull [Accelerated Failure Time model](https://en.wikipedia.org/wiki/Accelerated_failure_time_model) and the [Proportional Hazards](https://en.wikipedia.org/wiki/Proportional_hazards_model) models are special cases of the WTTE-RNN. When $$\beta=2$$ it coincides with the [Rayleigh-distribution](https://en.wikipedia.org/wiki/Rayleigh_distribution). 
 
@@ -269,7 +270,7 @@ $$
 $$
 
 There's some mathy assumptions and proofs to justify it probabilistically (read the thesis) but the intuition why it works is pretty clear:
-![](/assets/optimizing_censored.svg)
+![optimizing_censored.png](http://i.imgur.com/2AnTHaR.png)
 
 With $$u=1$$ if we have uncensored data, after some manipulations we can see that the loglikelihood (**objective functions**) becomes:
 
@@ -293,16 +294,16 @@ Let's forget about features for now and check out this simple example. I simulat
 
 When we have discrete data of low resolution it's pretty clear how training works with different levels of censoring. Check the GIF below, $$\infty$$, 2 and 1 uncensored 'bins' which leads to 0%, 36.8%, and 77.9% of observations being censored:
 
-![Discrete distribution, low res](/assets/all_discrete_a2_censoring.gif)
+![all_discrete_a2_censoring.gif](http://i.imgur.com/0JyrJKz.gif)
 The vertical red dotted line in the rightmost graph marks where censoring occurs so TTE falling on the right of it are censored. See what happens at $$77.9$$% censoring. Here the training data only has two different values to see: $$y=0$$ or $$\tilde{y}=1$$. 
 All initializations reach the correct conclusion that $$\Pr(Y=0)\approx 0.21$$ but yellow and green gets stuck in local minimas leading to erronous conclusions about the right tail of the distribution.
 
 With higher resolution we can get away with more censoring. Here showing training with $$\infty$$, 10 and 5 uncensored 'bins' which leads to 0%, 73.9% and 91.4% of observations being censored:
 
-![Discrete distribution, high res](/assets/all_discrete_a20_censoring.gif)
+![all_discrete_a20_censoring.gif](http://i.imgur.com/KfE4eKz.gif)
 
 With truly continuous data it seven ends up figuring it out with more than $$99.9$$% censoring:
-![Continuous distribution](/assets/all_contin_a2_censoring.gif)
+![all_contin_a2_censoring.gif](http://i.imgur.com/zUgJdpd.gif)
 
 
 The takeaway is that if the way your data is being censored is *random enough* (doesn't effect the TTE and can't be predicted using your features) and you don't have too coarse TTE-data, censoring isn't much of a problem.
@@ -312,7 +313,7 @@ In the real world you *assume* that your TTE is Weibull given your data. Even if
 # Implementation & Experiments
 All you need is your favorite step-to-step RNN-architecture (also called char-RNN) with a 2-dimensional positive output layer. I recommend using SoftPlus to output $$\beta$$ and exponential activation to output $$\alpha$$. 
 
-![](/assets/fig_rnn_weibull.png)
+![fig_rnn_weibull.png](http://i.imgur.com/OFKXx3C.png)
 
 After some smart initialization you then train the network using discrete or continuous weibull-loss, here implemented in tensorflow:
 
@@ -341,7 +342,7 @@ def weibull_beta_penalty(b_,location = 10.0, growth=20.0, name=None):
     with tf.name_scope(name):
         scale = growth/location
         penalty_ = tf.exp(scale*(b_-location))
-    return(penalty_)       
+    return(penalty_)
 {% endhighlight %}
 
 There's other simple extensions. Cumulative Hazard function-space is closed under summation so you can easily create new distributions like multimodal predictions. We could also extend it to multivariate TTE's by just widening the output layer together with some covariance structure but that's for another blogpost. 
@@ -360,11 +361,11 @@ $$
 The network is a tiny LSTM with a recurrent state size 10 so $$1\times 10 \times 2$$ neurons altogether. I still had to penalize it as discussed above to avoid perfect fit and numerical instability. During training the network only got to see the censored target value in the last (rightmost) steps. I tried this using 100, 75, 50, 25 and 5 steps between the points. 
 
 Check the results (true TTE superimposed in black, censored dotted black), it worked really well except at spacing 100 (first pic) where it goes nuts :
-![evenly spaced 100](/assets/evenly_spaced_100.gif)
-![evenly spaced 75](/assets/evenly_spaced_75.gif)
-![evenly spaced 50](/assets/evenly_spaced_50.gif)
-![evenly spaced 25](/assets/evenly_spaced_25.gif)
-![evenly spaced 5](/assets/evenly_spaced_5.gif)
+![evenly_spaced_100.gif](http://i.imgur.com/Cjz1yfm.gif)
+![evenly_spaced_75.gif ](http://i.imgur.com/6s17rOU.gif)
+![evenly_spaced_50.gif ](http://i.imgur.com/xTzd7KT.gif)
+![evenly_spaced_25.gif ](http://i.imgur.com/klNuiZe.gif)
+![evenly_spaced_5.gif  ](http://i.imgur.com/WAkmO5t.gif)
 
 In the first pic the spacing was so wide that it only trained on one event at a time, meaning it never got to train on uncensored TTE's after the first event. This incentivices it to always push predicted location up after seeing an event. In doing so it gets it wrong, but it's honest about not being sure!
 
@@ -376,7 +377,7 @@ There's a pretty cool dataset called the C-MAPSSS, or the [Turbofan Engine Degra
 
 I used a vanilla LSTM with width 100 of the recurrent state and a 10-node hidden layer ($$26 \times 100 \times 10 \times 2$$). With little to no hyperparameter-search I managed to get competitive results. The predicted output for some sequence that failed after 130 cycles looks something like this:
 
-![cmapss](/assets/it_61786_pmf_stack_151.png)
+![it_61786_pmf_stack_151.png](http://i.imgur.com/kapWXMD.png)
 It's pretty mesmerizing how the distribution becomes tighter and tighter as the engine starts to break down. Both the predicted expected value and the MAP (mode) gets closer and closer to the target. How does this translate to churn?
 
 ## How to use WTTE-RNN as a churn-model
@@ -403,10 +404,10 @@ This means that plotting them gives you a neat tool to monitor your whole custom
 
 From the C-MAPSS example, when plotting the predicted parameters for all the jet engines and their timesteps some weird pattern emerges. The alpha-baseline is the raw target value mean and the beta-baseline separates decreasing ($$\beta<1$$) or increasing ($$\beta>1$$) risk. 
 
-![cmapss alpha vs beta](/assets/61786_alphabetaplot.png)
+![61786_alphabetaplot.png](http://i.imgur.com/8o0bHLu.png)
 Adding time as a third axis it looks like each jet engine takes a walk on this graph. I superimposed the predicted parameters from the individual jet engine shown previously:
 
-![cmapss alpha vs beta vs time](/assets/61786_scatter3dplot_151.png)
+![61786_scatter3dplot_151.png](http://i.imgur.com/dEUj9Qe.png)
 This engine took a semi-random walk from the far right corner to the bottom left corner. All engines seemed to traverse this graph in a similar fashion. 
 
 We could name each region in some smart way. The peak ($$\alpha\approx 50$$, $$\beta> 2$$) could for example be called 'known failure onset'. Think what this plot could mean for analysing your customer onboarding process and where each customer is in it *now*.
@@ -419,11 +420,11 @@ We could get a richer, but less intuitive, embedding by choosing to store the wh
 There's other ways to visualize a a whole customer base. Take individual timelines and stack them on top of eachother. This gives us a graph showing the prediction and how it varied through time. The jet-engine test set. 
 
 By coloring the timelines with their predicted **alpha**:
-![cmapss alpha](/assets/it_61786_alpha.png)
+![it_61786_alpha.png](http://i.imgur.com/s7u6t2O.png)
 It tells tell us about the predicted time to *future events* from each point in time. Every horizontal line is a jet-engine and its predicted value. Here the prediction goes from healthy *far away*-red to worrying *anytime soon!*-blue
 
 By coloring them by their predicted **beta**:
-![cmapss beta](/assets/it_61786_beta.png)
+![it_61786_beta.png](http://i.imgur.com/M0uSsdp.png)
 It tells us how confident the predictions where. It seems like the confidence was the highest (red) at what looks like the onset of degradating health. 
 
 Here the xlab *time* means survival time but for a customer database it would a timeline of cohorts. This could give you a realtime prediction of current churn (by threshold in the right tail say) and DAU (thresholding in the left tail). By taking mean over the prediction you would get a predicted *rate* for all your customers. 
@@ -438,12 +439,12 @@ Too summarise, the WTTE-RNN can:
 
 And it's less hacky than the sliding box model as you don't need to set some arbitrary window size before training your model. The whole modeling cycle just gets smoother. You can use all your available data and you get output that's interpretable. 
 
-There are assumptions, but they are explicit - no hidden or dirty tricks:
+There are assumptions (it's a *model*, not reality), but they are explicit - no hidden or dirty tricks:
 
-* Assumptions about the time to event being Weibull given features
-* Assumptions about uninformative censoring
+* Assume the time to event to be Weibull distributed given features
+* Assume uninformative censoring
 
-I'm currently working on cleaning up some research-grade dirty code and add it on github. PM me if you can't wait.
+I'm currently working on cleaning up some research-grade dirty code to put it on github. PM me if you can't wait.
 
 ps. I'm sure alot of people have built this model or variants of it previously but I haven't been able to find any papers on it. If you have and want to discuss it/be cited please get in touch!
 
