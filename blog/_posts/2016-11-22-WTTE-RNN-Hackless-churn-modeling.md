@@ -20,7 +20,7 @@ Table of contents:
 {:toc}
 
 ## Churn prediction is hard
-There's been a couple of great [articles](https://engineering.shopify.com/17488468-defining-churn-rate-no-really-this-actually-requires-an-entire-blog-post) where the author is almost ashamed to admit how hard it is to define an aggregate churn metric. I think they could have gone further than that. Even here they assumed that the definition of a churned customer is written in stone which is typically not the case. Unfortunately it seems like a bunch of stakeholders have this scary idealized view of the problem:
+There's been a couple of great [articles](https://engineering.shopify.com/17488468-defining-churn-rate-no-really-this-actually-requires-an-entire-blog-post) where the author is almost ashamed to admit how hard it is to define an aggregate churn metric. I think they could have gone further than that. Even here they assumed that the definition of a churned customer is written in stone which is typically not the case. You only need to google 'churn prediction' to realize that a bunch of stakeholders have this scary idealized view of the problem:
 
 > Customer $$n$$ has a feature vector $$x^n$$ and a binary target value $$y^n$$:
 >
@@ -45,23 +45,23 @@ Reality rarely fits into this box. Even though we often know a churned customer 
 
 After realizing this and snapping out of the dream, data scientists will often end up defining it by drawing some arbitrary line in the sand like 'no purchase for 30 days'. This is nothing to be ashamed of and there are a few tricks that helps you speed up this modeling process. The first is to frame the problem in a good way. 
 
-### Churn prediction = event prediction
+### Churn prediction = non-event prediction
 Don't predict churn, predict non-churn. My philosophy is losely that *if something happens in the future* that can be used to define the customer as non-churned we can define this *something* as an *event*. If there's an event happening in the future we can define the *time* to that event from any prior point in time. If a customer has a longer time to a future event that customer is *more churned*. 
 
 The raw data that we have to work with are a series of records for each customer. You can think of each customer as a timeline starting from when we first saw them until today. We can stack these timelines on top of eachother to get some overview on who had data when:
 
-![](/assets/stacked_timelines.png								){:class="img-responsive"}
+![](/assets/stacked_timelines.png								)
 
 Divide your dataset so that you have the *events* (like purchases or logins) that matters for your churn definition and *features* (clicks, purchases, logins) that can be used to predict them. 
  
-![](/assets/intro_event_feature_pairs_v2.gif				){:class="img-responsive"}
+![](/assets/intro_event_feature_pairs_v2.gif				)
 
 We want to use these features to sequentially predict the future using historic data:
-![](/assets/intro_sequential_prediction.gif								){:class="img-responsive"}
+![](/assets/intro_sequential_prediction.gif								)
 
 The next trick is to define **what** you want to predict which can be done in multiple ways. I think the most natural thing is to predict the **time to the next event** $$y_t$$ at each timestep $$t$$. I will call this **TTE** for short. We can visualize this as a kind of sawtooth-wave:
 
-![](/assets/intro_tte_nofuzz.gif							){:class="img-responsive"}
+![](/assets/intro_tte_nofuzz.gif							)
 If some user has a longer time to the next purchase it's reasonable to say that they are *more churned*. If the user never purchases anything again $$y_t=\infty$$. Problem is that we need to wait infinitely long to know that this was the case. This leads us to the fundamental problem of this type of data: **censoring**.
 
 ### Censored data
@@ -69,7 +69,7 @@ We don't know how old we'll be but we know that we'll get older than our current
 
 In our world we only have event-data from the **observed past** i.e from when we first saw the customer up until now. This means that we don't know what the actual time to the next (unseen) event was after the last seen event. This gives us a lower bound that we can use for training, $$\hat{y}_t\leq y_t$$. This partial observation is called **right censored data** and is shown in dotted red:
 
-![](/assets/intro_tte.gif									){:class="img-responsive"}
+![intro_tte.gif](/assets/intro_tte.gif)
 
 A censored observation $$\tilde{y}_t$$ is interpreted as *"at time $$t$$ there was at least $$\hat{y}_t$$ timesteps until an event"*. How can we use this data for training models? 
 
@@ -89,7 +89,7 @@ $$
 $$
 
 This can be seen as sliding a box in front of you and see if it covers any events:
-![](/assets/previous_work_sliding_box_gendata_tau_2.gif		){:class="img-responsive"}
+![previous_work_sliding_box_gendata_tau_2.gif](/assets/previous_work_sliding_box_gendata_tau_2.gif		)
 Here the unknowns/$$NA$$'s appear in the last $$\tau$$ steps of the observations when there's no events (shown as blank in plot).
 
 To construct a probabilistic objective function, think of the $$b_t$$'s as independently drawn from a Bernoulli distribution that has a time varying parameter $$\theta_t$$ denoting the probability of event within $$\tau$$ time from timestep $$t$$:
@@ -114,7 +114,7 @@ $$
 
 Predicting with the model can be visualized as letting the box-height be the predicted probability $$\theta_t$$:
 
-![](/assets/previous_work_sliding_box_pred_tau_2.gif		){:class="img-responsive"}
+![](/assets/previous_work_sliding_box_pred_tau_2.gif		)
 
 #### Use as a churn-model
 There's some obvious benefits of this model. 
@@ -131,20 +131,20 @@ In any case you probably want $$\tau$$ to be as big as possible since you want t
 
 * We can't use the last $$\tau$$ timesteps for training
 
-We can get 1-valued $$b_t$$'s here if there are events but we can't exclude that there's no event just beyond the boundary. Unless we explicitly model this dropout we don't know what sorts of biases and class-imbalances we introduce by using the positive observations. It's therefore safest to drop all observations happening in the last $$\tau$$ steps. This means that the higher $$\tau$$ is, the less data we have to train on. 
+We can observe $$b_t=1$$ here if there are events but we can't exclude that there's no event just beyond the boundary. Unless we explicitly model this dropout we don't know what sorts of biases and class-imbalances we introduce by using the positive observations. It's therefore safest to drop all observations happening in the last $$\tau$$ steps. This means that the higher $$\tau$$ is, the less recent data we have to train on. 
 Raising $$\tau$$ also induce a kind of sparsity such as all being 1's:
 
-![](/assets/previous_work_sliding_box_gendata_tau_4.gif		){:class="img-responsive"}
+![](/assets/previous_work_sliding_box_gendata_tau_4.gif		)
 
-Destroying the nuances in your data and making it harder to learn anything for customers that have many events. 
+Giving very blunt signals for your model to train on. 
 
 So if $$\tau$$ is too small the model output becomes meaningless. If $$\tau$$ is too big we can't train it. In summary, the sliding box model is
 
 * Hackish and horrible to work with
 
-The parameter $$\tau$$ rigidly defines everything about your model. Changing $$\tau$$ changes your data pipeline. It also changes the meaning of your predicted output and the model performance. Finding the balance is an awful and time-consuming iterative modeling loop.
+The parameter $$\tau$$ rigidly defines everything about your model. Changing $$\tau$$ changes your data pipeline. It also changes the meaning of your predicted output and the model performance. Striking a balance is an awful and time-consuming iterative modeling loop.
 
-In some settings binary targets/$$\tau$$'s are more easily defined. [Moz developer blog](https://moz.com/devblog/deep-learning-for-customer-churn-prediction/) wrote a nice piece about how they successfully used RNNs in what looks like a similar framework. 
+In some settings binary targets/$$\tau$$'s are more easily defined and this model is great in certain applications. [Moz developer blog](https://moz.com/devblog/deep-learning-for-customer-churn-prediction/) wrote a nice piece about how they successfully used RNNs in what looks like a similar framework. 
 
 ### Making it a *learning to rank*-problem.
 
@@ -189,11 +189,19 @@ I think the last point is the most important one. One can argue that 'churn'-mod
 To do this you'll probably end up with a shoppinglist like this one
 
 ### A good churn-model is flexible
+As we've seen the big bottleneck in churn-modeling is feature-engineering and a cumbersome modeling loop, the final dream-model looks something like this:
 
-* Temporal patterns (Don't want to feature-engineer)
-* Discrete or continuous data (similar projects, different target values)
-* Flexibility in prediction
+1. For recurrent events
+2. Can handle time varying covariates 
+3. Can learn temporal patterns
+4. Handle sequences of varying length 
+5. Learn with censored data
+6. Flexible predictions 
 
+We can cross out 1-4 by using RNNs as the machine-learning algorithm. In short, Neural Networks feels less hacky than many other models as you can spend less time engineering features. Recurrent neural networks for time series prediction are less hacky than non-temporal alternatives because you don't have to hand-engineer features using windowfunctions such as 'mean number of purchases last x days'. 
+Regression-puritans will hang me for this, but **neural networks are not black box models**. If you want insights analyze the patterns your network learned, not the other way around. 
+
+The final points, 5-6 can be crossed of by choosing a smart objective function. Meet the WTTE-RNN:
 
 ## WTTE-RNN 
 The recipe for this model is embarassingly simple. In the most general framework you want to:
@@ -210,11 +218,11 @@ What I call the WTTE-RNN is when we
 * Assume $$Y\sim$$Weibull with parameters $$\alpha_t$$ and $$\beta_t$$
 * Let $$\theta_t=\begin{pmatrix}\alpha_t\\\beta_t\end{pmatrix}=g(x_{0:t})$$ to be the output of an RNN
 
-During training we push the pdf up around known TTE for uncensored data and minimize the area under the PDF until the censoring point for censored data. More on this later. 
-
 The sequential prediction over the timeline can then be visualized as:
 ![WTTE-RNN](/assets/solution_beta_2.gif)
 (Here only varying $$\alpha_t$$ but you get the picture)
+
+During training we push the pdf up around known TTE for uncensored data and minimize the area under the PDF until the censoring point for censored data. More on this later. The point is that in order to learn from what we didn't see, we make assumptions on how the TTE behaves beyond the observation boundary. 
 
 So let's talk about the distribution that I think is an excellent choice for this problem.
 
@@ -261,14 +269,12 @@ $$
 $$
 
 There's some mathy assumptions and proofs to justify it probabilistically (read the thesis) but the intuition why it works is pretty clear:
-![](/assets/optimizing_censored.png)
+![](/assets/optimizing_censored.svg)
 
 With $$u=1$$ if we have uncensored data, after some manipulations we can see that the loglikelihood (**objective functions**) becomes:
 
 continuous | $$\log(f(t)^u \cdot S(t)^{1-u})$$ |$$=$$| $$ u\cdot \log\left(\lambda(t)\right) - \Lambda(t)$$
-discrete   | $$\log(p(t)^u \cdot S(t+1)^{1-u}) $$ |$$=$$| $$ u\cdot \log\left(e^{d(t)}-1\right) - \Lambda(t+1)$$
-
-Where we defined $$d(t) = \Lambda(t+1)-\Lambda(t)$$. The fact that we need to integrate the right tail should hint at why the Weibull distribution is a great choice as this is a nice closed form expression unlike alternatives such as the Gamma distribution.
+discrete   | $$\log(p(t)^u \cdot S(t+1)^{1-u}) $$ |$$=$$| $$ u\cdot \log\left(e^{\Lambda(t+1)-\Lambda(t)}-1\right) - \Lambda(t+1)$$
 
 To satisfy the assumptions to warrant its use we need *uninformative censoring*. With $$C$$ the censoring variable we need 
 
@@ -283,7 +289,7 @@ A weaker assumption exists but its kind of complicated. A good indicator of whet
 Be cautious but don't worry too much. If the entry time of your customers is somewhat random you can see the observation window over your timelines as a kind of slot machine making the censoring point random.
 
 #### Gradient descent over Weibull surfaces
-Let's forget about features for now and check out this simple example. I simulated some Weibull data and censored it at different thresholds. Below I show how the [gradient descent algorithm](http://sebastianruder.com/optimizing-gradient-descent/) (used to train Neural Networks) tries to find its way to the correct parameters (black dotted line) from four different initializations. I used RMSPROP here because momentum-optimizers would find the target too fast and leading to more exploding gradients or short animations. 
+Let's forget about features for now and check out this simple example. I simulated some Weibull data and censored it at different thresholds. Below I show how the [RMSPROP gradient descent algorithm](http://sebastianruder.com/optimizing-gradient-descent/) (used to train Neural Networks) tries to find its way to the correct parameters (black dotted line) from four different initializations.
 
 When we have discrete data of low resolution it's pretty clear how training works with different levels of censoring. Check the GIF below, $$\infty$$, 2 and 1 uncensored 'bins' which leads to 0%, 36.8%, and 77.9% of observations being censored:
 
@@ -295,7 +301,7 @@ With higher resolution we can get away with more censoring. Here showing trainin
 
 ![Discrete distribution, high res](/assets/all_discrete_a20_censoring.gif)
 
-With truly continuous data it seems to figure out the true parameters with almost any level of censoring. Here gradient descent recovered the correct parameters even with more than $$99.9$$% censoring. 
+With truly continuous data it seven ends up figuring it out with more than $$99.9$$% censoring:
 ![Continuous distribution](/assets/all_contin_a2_censoring.gif)
 
 
@@ -308,7 +314,7 @@ All you need is your favorite step-to-step RNN-architecture (also called char-RN
 
 ![](/assets/fig_rnn_weibull.png)
 
-After some smart initialization you then train the network using the appropriate loss-function, here implemented in tensorflow:
+After some smart initialization you then train the network using discrete or continuous weibull-loss, here implemented in tensorflow:
 
 {% highlight python %}
 def weibull_loglikelihood_continuous(a_, b_, y_, u_,name=None):
@@ -341,7 +347,7 @@ def weibull_beta_penalty(b_,location = 10.0, growth=20.0, name=None):
 There's other simple extensions. Cumulative Hazard function-space is closed under summation so you can easily create new distributions like multimodal predictions. We could also extend it to multivariate TTE's by just widening the output layer together with some covariance structure but that's for another blogpost. 
 
 ## Predicting evenly spaced points
-Let's try a simple example: randomly shifted sequences of evenly spaced points. The goal is to sequentially predict the number of steps to the next point. The feature data is a lagged event indicator:
+Let's try a simple example. Each training sequence is a randomly shifted sequence of evenly spaced points. The goal is to sequentially predict the number of steps to the next point. Each sequence consists of 100 timesteps. The feature data is a lagged event indicator:
 
 $$
 x_t=
@@ -351,7 +357,7 @@ x_t=
 \end{cases}
 $$
 
-The network is a tiny LSTM with a recurrent state size 10 so $$1\times 10 \times 2$$ neurons altogether. I still had to penalize it as discussed above to avoid perfect fit and numerical instability. I trained on sequences of length 100. During training the network only got to see the censored target value in the last (rightmost) steps. I tried this using 100, 75, 50, 25 and 5 steps between the points. 
+The network is a tiny LSTM with a recurrent state size 10 so $$1\times 10 \times 2$$ neurons altogether. I still had to penalize it as discussed above to avoid perfect fit and numerical instability. During training the network only got to see the censored target value in the last (rightmost) steps. I tried this using 100, 75, 50, 25 and 5 steps between the points. 
 
 Check the results (true TTE superimposed in black, censored dotted black), it worked really well except at spacing 100 (first pic) where it goes nuts :
 ![evenly spaced 100](/assets/evenly_spaced_100.gif)
@@ -360,34 +366,32 @@ Check the results (true TTE superimposed in black, censored dotted black), it wo
 ![evenly spaced 25](/assets/evenly_spaced_25.gif)
 ![evenly spaced 5](/assets/evenly_spaced_5.gif)
 
-In the first pic the spacing was so wide that it only saw one event at a time, meaning it never got to see uncensored TTE's after the first event. This incentives it to always push predicted location up after seeing an event. The nice thing is that it does it without confidence.
+In the first pic the spacing was so wide that it only trained on one event at a time, meaning it never got to train on uncensored TTE's after the first event. This incentivices it to always push predicted location up after seeing an event. In doing so it gets it wrong, but it's honest about not being sure!
 
-In my thesis I compared this with methods like disregarding the censored datapoints alotogether or imagining that it's uncensored and train on it anyway. Even though it might look funky the method discussed here outperformed all the naive ways on this problem. 
-The takeaway from those experiments was that when I had excessive censoring and took it into account I got pretty inaccurate but also pretty unsure predictions. Look how wide the predicted area was in the first gif! When I used other approaches, not taking censoring into account, I ended up getting extremely confident but completely wrong predictions, not just in the censored regions. I would prefer the former any day.
-
-
+In my thesis I compared this with methods like disregarding the censored datapoints or treating them like uncensored. When not explicitly modeling censoring I ended up getting extremely confident *and* completely wrong predictions. Taking censoring into account won on test set every time.
 
 ## Predicting the destruction of jet-engines
 There's a pretty cool dataset called the C-MAPSSS, or the [Turbofan Engine Degradation Simulation Data Set
-](https://ti.arc.nasa.gov/tech/dash/pcoe/prognostic-data-repository/). The subset of data used here consists of 418 sequences of 26-dimensional sensor-readings as the features which is used to sequentially predict the time to failure. Here we don't have censored data but it's an interesting example anyway.
+](https://ti.arc.nasa.gov/tech/dash/pcoe/prognostic-data-repository/). The subset of data used here consists of 418 sequences of 26-dimensional jet-engine sensor-readings which is used to sequentially predict the time to failure (also called Remaining Useful Life/RUL). Here we don't have censored data but it's an interesting example anyway.
 
-I used a vanilla LSTM with width 100 of the recurrent state and a 10-node hidden layer ($$26 \times 100 \times 10 \times 2$$). With little to no hyperparameter-search I managed to get what looks like an extremely competitive result. (I'm not reporting test-score here since I splitted data differently than in the challenge). The predicted output for a random sequence in the test set looks something like this:
+I used a vanilla LSTM with width 100 of the recurrent state and a 10-node hidden layer ($$26 \times 100 \times 10 \times 2$$). With little to no hyperparameter-search I managed to get competitive results. The predicted output for some sequence that failed after 130 cycles looks something like this:
 
-![cmapss](/assets/it_61786_pmf_stack_3.png)
-It's pretty mesmerizing how the distribution becomes tighter and tighter as the engine starts to break down. Both the predicted expected value and the MAP (mode) gets closer and closer to the target. 
+![cmapss](/assets/it_61786_pmf_stack_151.png)
+It's pretty mesmerizing how the distribution becomes tighter and tighter as the engine starts to break down. Both the predicted expected value and the MAP (mode) gets closer and closer to the target. How does this translate to churn?
 
 ## How to use WTTE-RNN as a churn-model
-By predicting a distribution over TTE I think we get more actionable predictions. Just like with the sliding-box model we can estimate the probability of event within some fixed time window such as *if probability of purchase within 30 days is less than 0.01 customer is churned*. The big difference is that we can decide which threshold to use *after* the model is trained.
-
+In churn-prediction I've argued that you're really interested in *non events*. Instead of focusing on the events we focus on the void, i.e the *time between events*. As you know the time since an event in real time you only need to predict the time *to* events. 
 
 Ground-truth-world | actual churners| customer with TTE $$y_t>\tau$$ **is** churned
-Prediction world   | predicted churners| $$\Pr(Y_t>\tau)>\theta^*$$ the customer is **predicted** as churned
+Prediction world   | predicted churners| $$\Pr(Y_t\leq \tau)<\theta^*$$ the customer is **predicted** as churned
 training world | observed churners | If $$y_t<\tau$$ customer **was** active. If $$\hat{y}_t\geq\tau$$ customer **was** churned
 
-Where $$\theta^*$$ is some threshold like $$0.5$$. Even if the company only existed for 100 days we can in theory define a churner as someone who is predicted to be without a purchase in the coming $$\tau=200$$ days. 
+Just like with the sliding-box model's definition of churn we can estimate the probability of event within some fixed time window such as *if probability of purchase within $$\tau=100$$ days is less than $$\theta^*=0.01$$ customer is churned*. The big difference is that we can decide which threshold to use *after* the model is trained and we can extrapolate to set *any* threshold, like $$\tau=200$$ even if your company only existed for 100 days.
 
-With a distribution we can also derive and predict a bunch of other interesting metrics that might interface with your KPI's like DAUs and MAUs. It should also be possible to use it to predict the dreadedly hard concept of Customer Lifetime Value.
+The WTTE-RNN does involve a leap of faith as we're making assumptions, arguably a more intricate assumption than with the sliding box model. Unlike with the Sliding Box model you may use the latest data for training. Not doing so is also an assumption. 
 
+With a distribution we get much richer predictions giving us room to define a more sensitive and interpretable churn-definition.
+We can also use it to derive and predict a bunch of other interesting metrics that might interface with your KPI's like DAUs and MAUs. It should also be a good start for predicting the dreadedly hard concept of Customer Lifetime Value (lifetime or next years payments is a censored datapoint).
 
 But wait! There's more..
 
@@ -400,17 +404,17 @@ This means that plotting them gives you a neat tool to monitor your whole custom
 From the C-MAPSS example, when plotting the predicted parameters for all the jet engines and their timesteps some weird pattern emerges. The alpha-baseline is the raw target value mean and the beta-baseline separates decreasing ($$\beta<1$$) or increasing ($$\beta>1$$) risk. 
 
 ![cmapss alpha vs beta](/assets/61786_alphabetaplot.png)
-Adding time as a third axis it looks like each jet engine takes a walk on this graph. I superimposed the predicted parameters from the individual sequence above:
+Adding time as a third axis it looks like each jet engine takes a walk on this graph. I superimposed the predicted parameters from the individual jet engine shown previously:
 
 ![cmapss alpha vs beta vs time](/assets/61786_scatter3dplot_151.png)
-This engine went from the far right corner to the bottom left corner. All engines seemed to traverse this graph in a similar fashion. 
+This engine took a semi-random walk from the far right corner to the bottom left corner. All engines seemed to traverse this graph in a similar fashion. 
 
 We could name each region in some smart way. The peak ($$\alpha\approx 50$$, $$\beta> 2$$) could for example be called 'known failure onset'. Think what this plot could mean for analysing your customer onboarding process and where each customer is in it *now*.
 
 So despite giving us a bunch of different alternatives to create a fixed churn-definition such as deciding threshold on what the predicted expected value, quantile or something else we can choose regions in the Weibull-plot and name them. 
 As an example, if $$\beta$$ is really high we're pretty sure about when the next event will be. Maybe these are christmas-shoppers?
 
-We could get a richer, but less intuitive, embedding by choosing to store some other hidden layer of the RNN-state and use it for clustering or as features for other models. 
+We could get a richer, but less intuitive, embedding by choosing to store the whole hidden RNN-state and use it for clustering or as features for other models. Think Word2Vec for churn. 
 
 There's other ways to visualize a a whole customer base. Take individual timelines and stack them on top of eachother. This gives us a graph showing the prediction and how it varied through time. The jet-engine test set. 
 
@@ -422,28 +426,25 @@ By coloring them by their predicted **beta**:
 ![cmapss beta](/assets/it_61786_beta.png)
 It tells us how confident the predictions where. It seems like the confidence was the highest (red) at what looks like the onset of degradating health. 
 
-Here the xlab means survival-time for each aircraft engines but for a customer database it would show prediction at a given date. This could give you a realtime prediction of current churn (by threshold in the right tail say) and DAU (thresholding in the left tail). By taking mean over the prediction you would get a predicted *rate* for all your customers. 
+Here the xlab *time* means survival time but for a customer database it would a timeline of cohorts. This could give you a realtime prediction of current churn (by threshold in the right tail say) and DAU (thresholding in the left tail). By taking mean over the prediction you would get a predicted *rate* for all your customers. 
 
 # Summary
-
-There's a big *check* on all these points 
-
-So in the end, don't look for *the* churn definition (you won't find it) 
-
-In summary, the WTTE-RNN can
+Too summarise, the WTTE-RNN can:
 
 * Handle discrete or continuous time
 * Train on censored data
-* Learn long-term temporal patterns
 * use temporal features/time varying covariates
+* Learn long-term temporal patterns
 
-Artificial Neural Networks feels less hacky than many other models as you can spend less time engineering features. Recurrent neural networks for time series prediction are less hacky than non-temporal alternatives because you don't have to hand-engineer features using windowfunctions such as 'mean number of purchases last x days'. 
+And it's less hacky than the sliding box model as you don't need to set some arbitrary window size before training your model. The whole modeling cycle just gets smoother. You can use all your available data and you get output that's interpretable. 
 
-The WTTE-RNN is less hacky than the sliding box model as you don't need to set some arbitrary window size before training your model. The whole modeling cycle just gets smoother. You can use all your available data and you get output that's interpretable. 
+There are assumptions, but they are explicit - no hidden or dirty tricks:
 
 * Assumptions about the time to event being Weibull given features
 * Assumptions about uninformative censoring
 
-ps. I'm sure alot of people have built this model previously but I haven't been able to find any papers on it. If you have and want to discuss it please get in touch!
+I'm currently working on cleaning up some research-grade dirty code and add it on github. PM me if you can't wait.
+
+ps. I'm sure alot of people have built this model or variants of it previously but I haven't been able to find any papers on it. If you have and want to discuss it/be cited please get in touch!
 
 
