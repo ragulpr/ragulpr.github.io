@@ -19,7 +19,7 @@ Table of contents:
 
 * TOC
 {:toc}
-
+ 
 ## Churn prediction is hard
 There's been a couple of great [articles](https://engineering.shopify.com/17488468-defining-churn-rate-no-really-this-actually-requires-an-entire-blog-post) where the author is almost ashamed to admit how hard it is to define an aggregate churn metric. I think they could have gone further than that. Even here they assumed that the definition of a churned customer is written in stone which is typically not the case. You only need to google 'churn prediction' to realize that a bunch of stakeholders have this scary idealized view of the problem:
 
