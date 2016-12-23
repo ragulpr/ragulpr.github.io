@@ -8,10 +8,11 @@ I think the best way to communicate what ML-algos *does* and the kind of output 
 
 Sometimes (when we are optimizing log-loss) we can even make up probabilistic tales that will help us understand the kind of trade-offs that the objective function induces. 
 
-## Old Fashioned Heading 
+* Objective functions and data munging
+* Objective functions will lead you to good modeling-habits
+	- What's your population/probability space? 
+	- How are terms in the objective function related/weighted?
+	- Generalized view, modularity, etc. 
 
-![placeholder](http://i.giphy.com/WhoTma6RWCGcw.gif "Small example image")
+* Objective function and basic probability is needed to. compare home lasik
 
-![placeholder](.apple-touch-icon-precomposed.png "Small example image")
-
-Ablabla blabal balbal 

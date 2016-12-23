@@ -11,10 +11,16 @@ url:                 www.google.com
 baseurl:             ''
 paginate:            2 
 
-# About/contact
-author:
-  name:              Test McTest
+# About/contact for atom.xml
+author:              
+  name:              test
   url:               https://twitter.com/test
   email:             test@gmail.com
 
+
 # Custom vars
+authorname:          'Egil Martinsson'
+
+
+gems:
+  - jekyll-gist
