@@ -8,7 +8,7 @@ title:               'Focus on the objective'
 tagline:             'Egils blog'
 description:         'Blog about Machine Learning, data science and stuff.'
 url:                 www.google.com
-baseurl:             ''
+baseurl:             ragulpr.github.io/
 paginate:            2 
 
 # About/contact for atom.xml
@@ -23,4 +23,9 @@ authorname:          'Egil Martinsson'
 
 
 gems:
-  - jekyll-gist
+  - font-awesome-sass
+  - kramdown
+  - rouge
+
+layout: default
+comments: true
