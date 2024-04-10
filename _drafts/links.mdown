@@ -1,0 +1,6 @@
+
+* [Cortana intelligence, not churn but (machine)failure-prediction framed as binary, multiclass or a regression problem (not a censored problem). Nice walktrough of whole modeling process](https://docs.microsoft.com/sv-se/azure/machine-learning/cortana-analytics-playbook-predictive-maintenance)
+* [Alex Minnaar, overview focusing on class imbalance. Framing it as predicting those who cancel "soon"](http://alexminnaar.com/my-experience-with-churn-analysis.html)
+* [Microsoft azure, nice overview](https://docs.microsoft.com/sv-se/azure/machine-learning/machine-learning-azure-ml-customer-churn-scenario)
+* [Using Deep Learning to Predict Customer Churn in a
+Mobile Telecommunication Network](http://www.wiseathena.com/pdf/wa_dl.pdf)
