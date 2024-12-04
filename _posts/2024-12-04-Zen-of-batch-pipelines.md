@@ -78,10 +78,11 @@ batch stage => {s3://../_SUCCESS}
   * What's in the dataset and what output schema it has (name of output case class)
   * Infer from column names where data comes from
 
-<details>
-  <summary>Examples</summary>
+<!-- <details> -->
+  <!-- <summary>Examples</summary> -->
 
-Good:
+#### Examples
+##### Good:
 
 * `EventsWithLocations` luigi task
 * `s3://.../events-with-locations/../`
@@ -95,18 +96,19 @@ s3://bucket-name/retention=5/pipeline-name/events-with-locations/version=1/lookb
 ```
 This is long indeed but everything serves its purpose.
 
-Bad:
+##### Bad:
 
 * `InterestAttributeFilterPredictor` luigi task
 * `s3://bucket-name/pipeline-name/ecosystem/attribute-filter-predictions/version=0.0.3/..`
 * `FilterPredictor.scala`
 * Output type is an untyped `DataFrame`
 
-</details>
+<!-- </details> -->
 
 
-<details>
-  <summary> Implications</summary>
+<!-- <details> -->
+  <!-- <summary> Implications</summary> -->
+#### Implications
 
 * Luigi does all the path checking/manipulations.
 * If your stage is not easily named such that its luigi task explains its sideffect - you're likely trying to do something we shouldn't do.
