@@ -4,7 +4,7 @@ title: Zen of Batch Pipelines - A recipe to reduce cognitive load
 ---
 [![](https://victorianweb.org/art/illustration/dore/bible/8.jpg)](https://victorianweb.org/art/illustration/dore/bible/8.html)
 
-In this post, I'll share my hard-earned tricks for building and maintaining many many batch data pipelines. It's all about coercing yourself to keep the mental overhead to a minimum.
+In this post, I'll share some hard-earned tricks for building and maintaining many many batch data pipelines. It's all about coercing yourself to keep the mental overhead to a minimum.
 
 For the past 5 years I worked at Schibsted, a multinational Marketplace & Media giant in tiny Nordics. It was the deep learning ambitions and the massive streams of event data that lured me in and the great people and engineering culture and that kept me there.
 
