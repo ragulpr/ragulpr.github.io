@@ -2,14 +2,16 @@
 layout: post
 title: Zen of Batch Pipelines - A recipe to reduce cognitive load
 ---
+[![](https://victorianweb.org/art/illustration/dore/bible/8.jpg)](https://victorianweb.org/art/illustration/dore/bible/8.html)
+
 In this post, I'll share my hard-earned tricks for building and maintaining many many batch data pipelines. It's all about coercing yourself to keep the mental overhead to a minimum.
 
 For the past 5 years I worked at Schibsted, a multinational Marketplace & Media giant in tiny Nordics. It was the deep learning ambitions and the massive streams of event data that lured me in and the great people and engineering culture and that kept me there.
 
-My team ran the machine learning pipelines for personalization and advertising (roughly _behavioural events  in $\rightarrow$ predicted user traits out_). We maintained some 25 pipelines × 10s stages × 3 countries × dev/pre/pro under strict privacy, quality and downtime constraints.
+My team ran the machine learning pipelines for personalization and advertising (roughly _behavioural events  in $$\rightarrow$$ predicted user traits out_). We maintained some 25 pipelines × 10s stages × 3 countries × dev/pre/pro under strict privacy, quality and downtime constraints.
 
 
-Over the years I had many reasons to think about scaling a data team and its limiting factors. This matters because my humble opinion is that the only way an ML/Data team can create value is by _running_ their own jobs & services. Center of expertise? Internal consultants? No. More jobs $\propto$ more value and the written-in-flesh limit is the shared context of 12 people.
+Over the years I had many reasons to think about scaling a data team and its limiting factors. This matters because my humble opinion is that the only way an ML/Data team can create value is by _running_ their own jobs & services. Center of expertise? Internal consultants? No. More jobs $$\propto$$ more value and the written-in-flesh limit is the shared context of 12 people.
 
 To be able to debug & develop on the already vast error surface, cognitive load - hence variation - had to be kept in check. This was collectively learnt from thousands of hours sifting through confs, logs, stack-traces, s3, code, monitors etc etc.
 
@@ -18,7 +20,6 @@ I wrote this because my team needed a shared mental model of our battle-tested d
 Maybe it's of interest to the internet even if you're not using an analogous stack to what we had (Scala/Spark/Python/K8s/Luigi/S3). You can read this with one finger solemnly raised if it helps.
 
 # The Zen of batch pipelines
-[![](https://victorianweb.org/art/illustration/dore/bible/8.jpg)](https://victorianweb.org/art/illustration/dore/bible/8.html)
 
 Purpose of this document is to keep track and align programming principles for our batch pipelines.
 We should update this doc and revisit it to keep track of style/design decisions. If possible; keep it short/readable/declarative with the intended readers in mind:
