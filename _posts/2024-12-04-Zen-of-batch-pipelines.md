@@ -115,7 +115,7 @@ This is long indeed but everything serves its purpose.
 * If you don't know exactly what the output format of a stage is - a consumer won't either.
 * The mental model described here may not always fit to how we want to _write_ code, but if we try to conform to any kind consistent mental model it will help _reading_ and reasoning about the system (and mainly) the data afterwards.
 
-</details>
+<!-- </details> -->
 
 ## Testing
 
