@@ -4,7 +4,7 @@ title: About
 ---
 This is my personal blog where I'll be posting some random stuff about machine learning and data science.
 
-I've been obsessing about Time To Event modeling since the days of Theano. I just moved to Silicon Valley after quitting my job as a Staff Machine Learning Engineering at Schibsted where I worked with the problem of predicting things for millions of users every day and all the lovely engineering challenges that comes with making ML products and teams work well.
+I've been obsessing about Time To Event modeling since the days of Theano. I just moved to Silicon Valley after quitting my job as a Staff Machine Learning Engineering at Schibsted where I worked with the problem of predicting a lot of things for a lot of users.
 
 I studied Engineering Mathematics at Chalmers University of Technology where I focused on ML and optimization.
 
