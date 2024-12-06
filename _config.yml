@@ -22,7 +22,7 @@ author:
 authorname:          'Egil Martinsson'
 
 
-gems:
+plugins:
   - font-awesome-sass
   - kramdown
   - rouge
