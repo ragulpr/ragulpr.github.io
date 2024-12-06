@@ -40,3 +40,13 @@ validation-report.json
 # Folders to ignore
 node_modules
 bower_components
+
+# Build artifacts
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Bundle
+vendor/
+# Gemfile.lock

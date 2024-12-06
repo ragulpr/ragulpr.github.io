@@ -1,8 +1,9 @@
 ## TODO
-* Steal centering and default column open from hyde
+```
+make
+```
 
-
-## Built from poole/lanyon
+## Built from [poole/lanyon ](https://github.com/poole/lanyon)
 
 **Mark Otto**
 - <https://github.com/mdo>
