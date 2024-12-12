@@ -86,7 +86,7 @@ batch stage => {s3://../_SUCCESS}
 
 * `EventsWithLocations` luigi task
 * `s3://.../events-with-locations/../`
-* Scala main class under `com.schibsted.ate.pipelinename.jobs`:
+* Scala main class under `com.org.pipelinename.jobs`:
   * `EventsWithLocationsJob.scala`
 * Output type is `Dataset[EventWithLocation]`
 
@@ -98,9 +98,9 @@ This is long indeed but everything serves its purpose.
 
 ##### Bad:
 
-* `InterestAttributeFilterPredictor` luigi task
-* `s3://bucket-name/pipeline-name/ecosystem/attribute-filter-predictions/version=0.0.3/..`
-* `FilterPredictor.scala`
+* `EventAttributeEnrichment` luigi task
+* `s3://bucket-name/pipeline-name/ecosystem/predicted-events/version=0.0.3/..`
+* `EventPredictor.scala`
 * Output type is an untyped `DataFrame`
 
 <!-- </details> -->
